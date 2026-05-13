@@ -193,10 +193,14 @@ function App() {
         <QuestionnaireScreen onComplete={handleQuestionnaireComplete}/>
       )}
 
-      {/* Main app screens — no LIFF header in v5 */}
+      {/* Main app screens — with LIFF external header */}
       {showLiff && (
         <div className="wm-miniapp-sheet is-open" style={{position:'absolute', inset:0}}>
-          <div className="wm-liff-body">
+          <LineLiffHeader
+            title="Mico Work Match"
+            onClose={() => setScreen('tutorial')}
+          />
+          <div className="wm-liff-body with-liff">
             {screen === 'swipe' && (
               <SwipeScreen
                 key={swipeKey}

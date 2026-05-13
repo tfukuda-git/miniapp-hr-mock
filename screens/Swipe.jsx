@@ -3,6 +3,7 @@
 function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remaining, toastMsg, user, liked, autoSwipe}) {
   const [idx, setIdx] = React.useState(0);
   const [drag, setDrag] = React.useState({x: 0, y: 0, active: false, rot: null});
+  const [isResetting, setIsResetting] = React.useState(false);
   const startRef = React.useRef({x: 0, y: 0});
   const dragRef = React.useRef({x: 0, y: 0, active: false});
   const cardRef = React.useRef(null);
@@ -28,13 +29,18 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
     dragRef.current = {x: targetX, y: 0, active: false};
     setDrag({x: targetX, y: 0, active: false, rot});
     setTimeout(() => {
+      setIsResetting(true);
       historyRef.current.push({dir, idx});
       if (dir === 'like') onLike(jobs[idx]);
       else onNope(jobs[idx]);
       setIdx(i => (i + 1) % jobs.length);
-      dragRef.current = {x: 0, y: 0, active: false};
-      setDrag({x: 0, y: 0, active: false, rot: null});
-      animatingRef.current = false;
+      // Wait one frame so React renders with the card hidden, then reveal at x=0
+      requestAnimationFrame(() => {
+        dragRef.current = {x: 0, y: 0, active: false};
+        setDrag({x: 0, y: 0, active: false, rot: null});
+        setIsResetting(false);
+        animatingRef.current = false;
+      });
     }, 260);
   }, [jobs, idx, onLike, onNope]);
 
@@ -129,7 +135,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
             <div
               ref={cardRef}
               className={`wm-tcard ${drag.active ? 'dragging' : ''}`}
-              style={{transform, zIndex:3}}
+              style={{transform, zIndex:3, opacity: isResetting ? 0 : 1}}
               onMouseDown={onPointerDown}
               onTouchStart={onPointerDown}
             >
