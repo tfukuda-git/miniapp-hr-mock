@@ -549,7 +549,7 @@
 .wm-tcard-inner.wm-tcard-landscape {
   display: flex;
   flex-direction: column;
-  height: auto;
+  height: auto !important;
 }
 .wm-tcard-photo {
   position: absolute;
