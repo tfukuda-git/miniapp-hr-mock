@@ -549,6 +549,7 @@
 .wm-tcard-inner.wm-tcard-landscape {
   display: flex;
   flex-direction: column;
+  height: auto;
 }
 .wm-tcard-photo {
   position: absolute;
@@ -1638,7 +1639,6 @@
 }
 
 .wm-tcard-body-land {
-  flex: 1;
   padding: 10px 14px 10px;
   display: flex;
   flex-direction: column;
@@ -1724,7 +1724,7 @@
 }
 .wm-tcard-detail-btn {
   width: 100%;
-  margin-top: auto;
+  margin-top: 8px;
   padding: 8px 0;
   background: var(--tg-500);
   border: none;
