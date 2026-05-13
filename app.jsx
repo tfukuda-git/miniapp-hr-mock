@@ -94,10 +94,6 @@ function App() {
     showToast(`Liked! 「${job.subcategory}」系の仕事が好みのようですね`);
     setLiked(arr => [{jobId: job.id, date: '今日', reason: '-'}, ...arr]);
     decrementAndCheckLimit();
-    const seq = ++swipeSeqRef.current;
-    setTimeout(() => {
-      if (seq === swipeSeqRef.current) setLikeSheet(job);
-    }, 400);
   };
 
   const handleNope = (job) => {
@@ -105,15 +101,6 @@ function App() {
     setSkipped(arr => [{jobId: job.id, date: '今日', reason: '-'}, ...arr]);
     swipeCountRef.current += 1;
     decrementAndCheckLimit();
-    if (autoSwipingRef.current) return;
-    const count = swipeCountRef.current;
-    const shouldAsk = count === 1 || count % 5 === 0;
-    const seq = ++swipeSeqRef.current;
-    if (shouldAsk) {
-      setTimeout(() => {
-        if (seq === swipeSeqRef.current) setFeedbackSheet({job, firstTime: count === 1});
-      }, 400);
-    }
   };
 
   const handleLikeReasonSubmit = (reason) => {
@@ -206,17 +193,10 @@ function App() {
         <QuestionnaireScreen onComplete={handleQuestionnaireComplete}/>
       )}
 
-      {/* Main app screens — with simplified LIFF header */}
+      {/* Main app screens — no LIFF header in v5 */}
       {showLiff && (
         <div className="wm-miniapp-sheet is-open" style={{position:'absolute', inset:0}}>
-          <LineLiffHeader
-            title="Mico Work Match"
-            onClose={() => {
-              // In v5 MVP, closing goes back to tutorial
-              setScreen('tutorial');
-            }}
-          />
-          <div className="wm-liff-body with-liff">
+          <div className="wm-liff-body">
             {screen === 'swipe' && (
               <SwipeScreen
                 key={swipeKey}
@@ -285,22 +265,7 @@ function App() {
               </div>
             )}
 
-            {/* Reason sheets */}
-            {likeSheet && (
-              <LikeReasonSheet
-                job={likeSheet}
-                onClose={()=>setLikeSheet(null)}
-                onSubmit={handleLikeReasonSubmit}
-              />
-            )}
-            {feedbackSheet && (
-              <FeedbackSheet
-                job={feedbackSheet.job}
-                firstTime={feedbackSheet.firstTime}
-                onClose={()=>setFeedbackSheet(null)}
-                onSubmit={handleFeedbackSubmit}
-              />
-            )}
+            {/* Reason sheets removed in v5 MVP */}
           </div>
         </div>
       )}

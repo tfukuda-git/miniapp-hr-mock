@@ -105,24 +105,23 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
   const transform = `translate(${drag.x}px, ${drag.y*0.3}px) rotate(${rot}deg)`;
 
   return (
-    <div className="wm-screen wm-screen-tinder">
-      <WMRichBar
-        user={user}
-        remaining={remaining}
-        total={10}
-        liked={(liked || []).length}
-        interviews={1}
-      />
+    <div className="wm-screen wm-screen-tinder" style={{display:'flex', flexDirection:'column'}}>
 
       <div className="wm-tinder-body">
         <div className="wm-tinder-deck">
           {next2 && (
-            <div className="wm-tcard" style={{transform:'scale(0.92) translateY(20px)', opacity:0.4, zIndex:1}}>
+            <div className="wm-tcard" style={{
+              transform:'scale(0.92) translateY(20px)', opacity:0.4, zIndex:1,
+              transition: 'transform 0.3s ease, opacity 0.3s ease',
+            }}>
               <TinderCardContent job={next2}/>
             </div>
           )}
           {nextJob && (
-            <div className="wm-tcard" style={{transform:'scale(0.96) translateY(10px)', opacity:0.7, zIndex:2}}>
+            <div className="wm-tcard" style={{
+              transform:'scale(0.96) translateY(10px)', opacity:0.7, zIndex:2,
+              transition: 'transform 0.3s ease, opacity 0.3s ease',
+            }}>
               <TinderCardContent job={nextJob}/>
             </div>
           )}
@@ -134,17 +133,9 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
               onMouseDown={onPointerDown}
               onTouchStart={onPointerDown}
             >
-              <TinderCardContent job={current}/>
+              <TinderCardContent job={current} onDetail={() => onOpenDetail(current)}/>
               <div className="wm-tcard-stamp wm-tcard-stamp-like" style={{opacity: likeOp}}>LIKE</div>
               <div className="wm-tcard-stamp wm-tcard-stamp-nope" style={{opacity: nopeOp}}>NOPE</div>
-              <button
-                className="wm-tcard-info"
-                onClick={(e)=>{e.stopPropagation(); if(Math.abs(drag.x)<8) onOpenDetail(current); }}
-                aria-label="詳細を見る"
-                title="詳細を見る"
-              >
-                <span className="material-symbols-rounded" style={{fontSize:20, fontVariationSettings:"'wght' 500"}}>info</span>
-              </button>
             </div>
           )}
         </div>
@@ -175,7 +166,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
 }
 
 // --- Tinder-style card content ---
-function TinderCardContent({job}) {
+function TinderCardContent({job, onDetail}) {
   return (
     <div className="wm-tcard-inner">
       <div className="wm-tcard-photo">
@@ -189,14 +180,6 @@ function TinderCardContent({job}) {
           </div>
         )}
         <div className="wm-tcard-photo-fade"/>
-      </div>
-
-      {/* Match badge top-left */}
-      <div className="wm-tcard-match">
-        <span className="material-symbols-rounded" style={{fontSize:12, color:'var(--tg-500)', fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
-        <span className="num">{job.match}</span>
-        <span className="pct">%</span>
-        <span className="label">マッチ</span>
       </div>
 
       {/* Category pill top-right area */}
@@ -225,10 +208,32 @@ function TinderCardContent({job}) {
           ))}
         </div>
 
-        <div className="wm-tcard-reason">
-          <span className="material-symbols-rounded" style={{fontSize:12, color:'var(--tg-ink)', fontVariationSettings:"'FILL' 1"}}>auto_awesome</span>
-          <span>{job.matchReason}</span>
-        </div>
+        {onDetail && (
+          <button
+            onClick={(e) => { e.stopPropagation(); onDetail(); }}
+            style={{
+              width: '100%',
+              marginTop: 10,
+              padding: '10px 0',
+              background: 'rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 10,
+              color: '#fff',
+              fontSize: 13,
+              fontWeight: 700,
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 4,
+            }}
+          >
+            <span className="material-symbols-rounded" style={{fontSize: 16}}>open_in_new</span>
+            詳細を見る
+          </button>
+        )}
       </div>
     </div>
   );

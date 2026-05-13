@@ -23,7 +23,7 @@ function TutorialScreen({onComplete}) {
       icon: 'favorite',
       iconBg: 'linear-gradient(135deg, #ff3b5c, #ff6b81)',
       title: '気になるリストを確認',
-      desc: '「気になる」に追加した求人は\nいつでもリストから確認できます。\n担当者への相談もワンタップ。',
+      desc: '「気になる」に追加した求人は\nいつでもリッチメニューから確認できます。',
       img: null,
     },
   ];
