@@ -484,7 +484,7 @@
 .wm-screen-tinder {
   background: #f7f9f8;
   padding-top: 0;
-  padding-bottom: 60px;
+  padding-bottom: 0;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -512,11 +512,11 @@
   margin-bottom: 8px;
 }
 .wm-tinder-actions {
-  padding: 6px 0 12px !important;
+  padding: 4px 0 8px !important;
   gap: 12px !important;
 }
-.wm-tbtn { width: 52px !important; height: 52px !important; }
-.wm-tbtn-big { width: 66px !important; height: 66px !important; }
+.wm-tbtn { width: 44px !important; height: 44px !important; }
+.wm-tbtn-big { width: 56px !important; height: 56px !important; }
 .wm-tinder-actions {
   flex-shrink: 0;
 }
