@@ -498,8 +498,8 @@
 .wm-tinder-body {
   position: absolute;
   left: 0; right: 0;
-  top: 116px; /* richbar only */
-  bottom: 80px; /* tabbar */
+  top: 8px;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   padding: 10px 14px 6px;
@@ -545,6 +545,10 @@
   position: relative;
   width: 100%;
   height: 100%;
+}
+.wm-tcard-inner.wm-tcard-landscape {
+  display: flex;
+  flex-direction: column;
 }
 .wm-tcard-photo {
   position: absolute;
@@ -1594,4 +1598,146 @@
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* =============================================
+   Landscape card layout — image top + info below
+   ============================================= */
+.wm-tcard-landscape {
+  display: flex;
+  flex-direction: column;
+}
+.wm-tcard-photo-land {
+  position: relative;
+  width: 100%;
+  height: 44%;
+  overflow: hidden;
+  background: #e8eaec;
+  flex-shrink: 0;
+}
+.wm-tcard-photo-land > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.wm-tcard-cat-land {
+  position: absolute;
+  left: 12px; bottom: 10px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.wm-tcard-body-land {
+  flex: 1;
+  padding: 14px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  overflow: hidden;
+}
+.wm-tcard-title-land {
+  font-family: var(--wm-font-jp);
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: #1a1a1a;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.wm-tcard-company-land {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.wm-tcard-wage-land {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.wm-tcard-wage-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--tg-500);
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+.wm-tcard-wage-amount {
+  font-family: var(--wm-font-num);
+  font-size: 22px;
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+.wm-tcard-wage-note {
+  font-size: 10px;
+  color: #888;
+  font-weight: 500;
+}
+.wm-tcard-meta-land {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #555;
+  margin-bottom: 8px;
+}
+.wm-tcard-tags-land {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.wm-tcard-tag-land {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 3px 8px;
+  background: #f0f2ff;
+  color: var(--tg-600);
+  border-radius: 4px;
+  border: 1px solid #dfe2ff;
+  white-space: nowrap;
+}
+.wm-tcard-detail-btn {
+  width: 100%;
+  margin-top: auto;
+  padding: 9px 0;
+  background: var(--tg-500);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.15s;
+}
+.wm-tcard-detail-btn:active {
+  background: var(--tg-600);
 }
