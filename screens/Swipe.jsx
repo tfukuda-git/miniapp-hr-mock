@@ -116,26 +116,38 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       <div className="wm-tinder-body">
         <div className="wm-tinder-deck">
           {next2 && (
-            <div className="wm-tcard" style={{
-              transform:'scale(0.92) translateY(20px)', opacity:0.4, zIndex:1,
-              transition: 'transform 0.3s ease, opacity 0.3s ease',
+            <div key={next2.id + '-bg2'} className="wm-tcard" style={{
+              transform:'scale(0.92) translateY(20px)',
+              opacity: isResetting ? 0 : 0.4,
+              visibility: isResetting ? 'hidden' : 'visible',
+              zIndex:1,
+              transition: isResetting ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
             }}>
               <TinderCardContent job={next2}/>
             </div>
           )}
           {nextJob && (
-            <div className="wm-tcard" style={{
-              transform:'scale(0.96) translateY(10px)', opacity:0.7, zIndex:2,
-              transition: 'transform 0.3s ease, opacity 0.3s ease',
+            <div key={nextJob.id + '-bg1'} className="wm-tcard" style={{
+              transform:'scale(0.96) translateY(10px)',
+              opacity: isResetting ? 0 : 0.7,
+              visibility: isResetting ? 'hidden' : 'visible',
+              zIndex:2,
+              transition: isResetting ? 'none' : 'transform 0.3s ease, opacity 0.3s ease',
             }}>
               <TinderCardContent job={nextJob}/>
             </div>
           )}
           {current && (
             <div
+              key={current.id + '-front'}
               ref={cardRef}
               className={`wm-tcard ${drag.active ? 'dragging' : ''}`}
-              style={{transform, zIndex:3, opacity: isResetting ? 0 : 1}}
+              style={{
+                transform,
+                zIndex:3,
+                opacity: isResetting ? 0 : 1,
+                visibility: isResetting ? 'hidden' : 'visible',
+              }}
               onMouseDown={onPointerDown}
               onTouchStart={onPointerDown}
             >
@@ -171,11 +183,12 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
   );
 }
 
-// --- Tinder-style card content ---
+// --- Tinder-style card content (landscape image + info below) ---
 function TinderCardContent({job, onDetail}) {
   return (
-    <div className="wm-tcard-inner">
-      <div className="wm-tcard-photo">
+    <div className="wm-tcard-inner wm-tcard-landscape">
+      {/* Top: landscape image */}
+      <div className="wm-tcard-photo-land">
         {job.photo ? (
           <img src={job.photo} alt="" draggable="false"/>
         ) : (
@@ -185,56 +198,42 @@ function TinderCardContent({job, onDetail}) {
             <div className="wm-tcard-bg-stripes"/>
           </div>
         )}
-        <div className="wm-tcard-photo-fade"/>
+        {/* Category pill on image */}
+        <div className="wm-tcard-cat-land">{job.category} · {job.subcategory}</div>
       </div>
 
-      {/* Category pill top-right area */}
-      <div className="wm-tcard-cat">{job.category} · {job.subcategory}</div>
-
-      {/* Bottom info block */}
-      <div className="wm-tcard-info-block">
-        <div className="wm-tcard-title">
-          <span>{job.title}</span>
-        </div>
-        <div className="wm-tcard-company">
-          <span className="material-symbols-rounded" style={{fontSize:14, opacity:0.85}}>location_on</span>
-          <span>{job.company} · {job.locationShort}</span>
+      {/* Bottom: info section on white background */}
+      <div className="wm-tcard-body-land">
+        <div className="wm-tcard-title-land">{job.title}</div>
+        <div className="wm-tcard-company-land">
+          <span className="material-symbols-rounded" style={{fontSize:13, color:'#888'}}>apartment</span>
+          <span>{job.company}</span>
+          <span style={{color:'#ccc', margin:'0 2px'}}>·</span>
+          <span className="material-symbols-rounded" style={{fontSize:13, color:'#888'}}>location_on</span>
+          <span>{job.locationShort}</span>
         </div>
 
-        <div className="wm-tcard-wage">
-          <span className="yen">¥</span>
-          <span className="amt">{job.wage.toLocaleString()}</span>
-          <span className="unit">/ {job.wageType === '時給' ? '時間' : '月'}</span>
-          <span className="shift">{job.shift}</span>
+        <div className="wm-tcard-wage-land">
+          <span className="wm-tcard-wage-label">{job.wageType}</span>
+          <span className="wm-tcard-wage-amount">¥{job.wage.toLocaleString()}</span>
+          {job.wageNote && <span className="wm-tcard-wage-note">{job.wageNote}</span>}
         </div>
 
-        <div className="wm-tcard-tags">
-          {job.tags.slice(0, 3).map((t, i) => (
-            <span key={i} className="wm-tcard-tag">{t}</span>
+        <div className="wm-tcard-meta-land">
+          <span className="material-symbols-rounded" style={{fontSize:13, color:'#888'}}>schedule</span>
+          <span>{job.shift}</span>
+        </div>
+
+        <div className="wm-tcard-tags-land">
+          {job.tags.slice(0, 4).map((t, i) => (
+            <span key={i} className="wm-tcard-tag-land">{t}</span>
           ))}
         </div>
 
         {onDetail && (
           <button
             onClick={(e) => { e.stopPropagation(); onDetail(); }}
-            style={{
-              width: '100%',
-              marginTop: 10,
-              padding: '10px 0',
-              background: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.3)',
-              borderRadius: 10,
-              color: '#fff',
-              fontSize: 13,
-              fontWeight: 700,
-              fontFamily: 'inherit',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4,
-            }}
+            className="wm-tcard-detail-btn"
           >
             <span className="material-symbols-rounded" style={{fontSize: 16}}>open_in_new</span>
             詳細を見る
