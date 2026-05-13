@@ -1,5 +1,5 @@
 // History — Like / Skip tabs
-function HistoryScreen({jobs, liked, skipped, onOpenDetail, onReconsider, remaining}) {
+function HistoryScreen({jobs, liked, skipped, onOpenDetail, onReconsider, remaining, onBack}) {
   const [tab, setTab] = React.useState('liked');
   const data = tab === 'liked' ? liked : skipped;
   const jobById = React.useMemo(() => {

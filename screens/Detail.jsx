@@ -1,5 +1,15 @@
 // Job detail screen
-function DetailScreen({job, origin = 'swipe', onBack, onLike, onSkip, onApply, onConsult}) {
+function DetailScreen({job, origin = 'swipe', onBack, onLike, onSkip, onApply, onConsult, onExternalLink}) {
+  const [showExtOverlay, setShowExtOverlay] = React.useState(false);
+
+  const handleExternalLink = () => {
+    setShowExtOverlay(true);
+    setTimeout(() => {
+      setShowExtOverlay(false);
+      if (onExternalLink) onExternalLink();
+    }, 1800);
+  };
+
   if (!job) return null;
   return (
     <div className="wm-screen" style={{paddingTop: 0, paddingBottom: 0, background:'#fff'}}>
@@ -208,8 +218,8 @@ function DetailScreen({job, origin = 'swipe', onBack, onLike, onSkip, onApply, o
         )}
         {origin === 'swipe' && (
           <>
-            <button onClick={onSkip} className="wm-btn-ghost" style={{flex:1}}>
-              スキップ
+            <button onClick={handleExternalLink} className="wm-btn-ghost" style={{flex:1}}>
+              詳細を見る
             </button>
             <button onClick={onLike} className="wm-btn-primary" style={{flex:2}}>
               <WM.Icon.Heart size={18} fill="#fff" stroke="none"/>
@@ -218,6 +228,44 @@ function DetailScreen({job, origin = 'swipe', onBack, onLike, onSkip, onApply, o
           </>
         )}
       </div>
+
+      {/* External browser overlay */}
+      {showExtOverlay && (
+        <div style={{
+          position:'absolute', inset:0, zIndex:100,
+          background:'rgba(0,0,0,0.6)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          animation:'fadeIn 0.2s ease',
+        }}>
+          <div style={{
+            background:'#fff', borderRadius:20, padding:'32px 28px',
+            textAlign:'center', maxWidth:280,
+            boxShadow:'0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{
+              width:56, height:56, borderRadius:'50%',
+              background:'linear-gradient(135deg, #2a2eea, #5e60ff)',
+              display:'flex', alignItems:'center', justifyContent:'center',
+              margin:'0 auto 16px',
+            }}>
+              <span className="material-symbols-rounded" style={{fontSize:28, color:'#fff'}}>open_in_browser</span>
+            </div>
+            <div style={{fontSize:15, fontWeight:700, color:'#1a1a1a', marginBottom:8}}>
+              外部ブラウザで表示
+            </div>
+            <div style={{fontSize:13, color:'#666', lineHeight:1.5}}>
+              外部ブラウザで求人詳細ページを<br/>表示します
+            </div>
+            <div style={{
+              marginTop:16, display:'flex', alignItems:'center', justifyContent:'center', gap:6,
+              color:'#999', fontSize:12,
+            }}>
+              <span className="material-symbols-rounded" style={{fontSize:16, animation:'spin 1s linear infinite'}}>refresh</span>
+              戻ります...
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

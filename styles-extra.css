@@ -1026,7 +1026,7 @@
    ============================================= */
 .wm-screen-history {
   background: #f7f9f8;
-  padding-bottom: 60px;
+  padding-bottom: 80px;
   position: absolute;
   inset: 0;
   overflow: hidden;
@@ -1582,4 +1582,16 @@
   color: #c6cac6;
   margin-top: 2px;
   letter-spacing: 0.02em;
+}
+
+/* =============================================
+   Animations — v5 additions
+   ============================================= */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

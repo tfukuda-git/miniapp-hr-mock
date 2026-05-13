@@ -22,7 +22,7 @@ function LineLiffHeader({title='Mico Work Match', onClose}) {
 // ============================================================
 // Rich top bar — user, stats, daily progress
 // ============================================================
-function WMRichBar({user, remaining, total=20, liked=0, interviews=1}) {
+function WMRichBar({user, remaining, total=10, liked=0, interviews=1}) {
   const pct = Math.max(0, Math.min(100, ((total-remaining)/total)*100));
   const initial = (user?.name || 'A').charAt(0).toUpperCase();
   return (

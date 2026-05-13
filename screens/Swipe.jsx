@@ -109,7 +109,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       <WMRichBar
         user={user}
         remaining={remaining}
-        total={20}
+        total={10}
         liked={(liked || []).length}
         interviews={1}
       />
