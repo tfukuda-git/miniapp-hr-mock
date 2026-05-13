@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8"/>
+  <title>Mico Work Match — LINE ミニアプリ</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800&family=Noto+Serif+JP:wght@300;400;500;600&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,300..700,0..1,-25..200&display=block"/>
+  <link rel="stylesheet" href="styles.css?v=17"/>
+  <link rel="stylesheet" href="styles-extra.css?v=34"/>
+
+  <!-- Embed mode (for LP iframe) -->
+  <style>
+    body.wm-embed {
+      background: transparent !important;
+      margin: 0; padding: 0;
+    }
+    body.wm-embed .wm-stage {
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 0 !important;
+    }
+  </style>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script>
+    // Tweak defaults — persisted via host
+    window.WM_TWEAKS = /*EDITMODE-BEGIN*/{
+      "theme": "classic",
+      "grain": "on",
+      "letterbox": "on"
+    }/*EDITMODE-END*/;
+  </script>
+
+  <script src="data.js?v=15"></script>
+</head>
+<body>
+  <div class="wm-stage" id="stage">
+    <!-- iOS device frame gets inserted here by React -->
+    <div id="mount"></div>
+  </div>
+
+  <!-- Tweaks panel (shows only when Tweaks mode is on) -->
+  <div class="wm-tweaks" id="tweaks">
+    <h3>Tweaks</h3>
+    <div class="wm-tweaks-row">
+      <span>カラーテーマ</span>
+      <select id="tw-theme">
+        <option value="classic">Classic Green</option>
+        <option value="dark">Letterbox Dark</option>
+      </select>
+    </div>
+    <div class="wm-tweaks-row">
+      <span>グレイン</span>
+      <select id="tw-grain">
+        <option value="on">ON</option>
+        <option value="off">OFF</option>
+      </select>
+    </div>
+    <div class="wm-tweaks-row">
+      <span>レターボックス</span>
+      <select id="tw-letterbox">
+        <option value="on">ON</option>
+        <option value="off">OFF</option>
+      </select>
+    </div>
+  </div>
+
+  <script type="text/babel" src="ui.jsx?v=15"></script>
+  <script type="text/babel" src="ios-frame.jsx?v=16"></script>
+  <script type="text/babel" src="screens/Shell.jsx?v=17"></script>
+  <script type="text/babel" src="screens/LineIntro.jsx?v=16"></script>
+  <script type="text/babel" src="screens/Swipe.jsx?v=30"></script>
+  <script type="text/babel" src="screens/Modals.jsx?v=15"></script>
+  <script type="text/babel" src="screens/Daily.jsx?v=15"></script>
+  <script type="text/babel" src="screens/Detail.jsx?v=5"></script>
+  <script type="text/babel" src="screens/History.jsx?v=2"></script>
+  <script type="text/babel" src="screens/Limit.jsx?v=5"></script>
+
+  <script type="text/babel" src="app.jsx?v=32"></script>
+
+  <script type="text/babel" data-presets="react">
+    // Host shell — mounts the iOS frame with auto-scale to fit viewport
+    function Host() {
+      // In embed mode (LP iframe), use scale=1 — LP handles external scaling
+      const isEmbed = new URLSearchParams(window.location.search).has('embed');
+      const [scale, setScale] = React.useState(1);
+      React.useEffect(() => {
+        if (isEmbed) return; // no auto-scaling in embed mode
+        const update = () => {
+          const pad = 40;
+          // iOS frame now has 10px bezel on each side → 410×864
+          const sx = (window.innerWidth - pad) / 410;
+          const sy = (window.innerHeight - pad) / 864;
+          setScale(Math.min(sx, sy, 1.2));
+        };
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+      }, []);
+      return (
+        <div style={{
+          width: 410 * scale,
+          height: 864 * scale,
+          position: 'relative',
+        }}>
+          <div style={{
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
+            width: 410,
+            height: 864,
+          }}>
+            <IOSDevice width={390} height={844}>
+              <div style={{position:'absolute', inset:0}}>
+                <App/>
+              </div>
+            </IOSDevice>
+          </div>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('mount')).render(<Host/>);
+  </script>
+
+  <script>
+    // Apply tweaks & expose edit-mode protocol
+    (function() {
+      const stage = document.getElementById('stage');
+      const panel = document.getElementById('tweaks');
+      function apply(t) {
+        const embed = document.body.classList.contains('wm-embed');
+        stage.classList.toggle('letterbox', !embed && t.letterbox !== 'off');
+        document.body.classList.remove('theme-classic','theme-dark');
+        document.body.classList.add('theme-' + (t.theme || 'classic'));
+        // grain on cards handled via CSS toggling body class if needed (reserved)
+        document.body.classList.toggle('grain-off', t.grain === 'off');
+      }
+      apply(window.WM_TWEAKS || {});
+
+      function readPanel() {
+        return {
+          theme: document.getElementById('tw-theme').value,
+          grain: document.getElementById('tw-grain').value,
+          letterbox: document.getElementById('tw-letterbox').value,
+        };
+      }
+      function writePanel(t) {
+        document.getElementById('tw-theme').value = t.theme || 'classic';
+        document.getElementById('tw-grain').value = t.grain || 'on';
+        document.getElementById('tw-letterbox').value = t.letterbox || 'on';
+      }
+      writePanel(window.WM_TWEAKS || {});
+
+      ['tw-theme','tw-grain','tw-letterbox'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+          const t = readPanel();
+          window.WM_TWEAKS = t;
+          apply(t);
+          window.parent.postMessage({type:'__edit_mode_set_keys', edits: t}, '*');
+        });
+      });
+
+      // Embed mode: transparent background, no letterbox
+      const isEmbed = new URLSearchParams(location.search).has('embed');
+      if (isEmbed) {
+        document.body.classList.add('wm-embed');
+        stage.classList.remove('letterbox');
+      }
+
+      window.addEventListener('message', (e) => {
+        const d = e.data || {};
+        if (d.type === '__activate_edit_mode') panel.classList.add('active');
+        if (d.type === '__deactivate_edit_mode') panel.classList.remove('active');
+      });
+      window.parent.postMessage({type:'__edit_mode_available'}, '*');
+    })();
+  </script>
+</body>
+</html>

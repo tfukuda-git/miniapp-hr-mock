@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Mico Work Match — LINEミニアプリ × Mico Engage AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    :root {
+      --brand:     #2a2eea;
+      --brand-700: #1e1bcc;
+      --brand-50:  #f0f0ff;
+      --brand-100: #dddeff;
+      --ink:       #0f1117;
+      --ink-700:   #1f2937;
+      --ink-500:   #6b7280;
+      --ink-300:   #d1d5db;
+      --surface:   #ffffff;
+      --surf-soft: #f8f9ff;
+      --border:    #e5e7eb;
+      --font-jp:   "Noto Sans JP", -apple-system, sans-serif;
+      --font-en:   "Inter", sans-serif;
+      --r:         12px;
+      --r-lg:      20px;
+      --ease:      cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: var(--font-jp);
+      background: var(--surface);
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      font-feature-settings: "palt";
+    }
+
+    /* ─── HEADER ─── */
+    .lp-header {
+      position: sticky; top: 0; z-index: 100;
+      height: 64px;
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+    }
+    .lp-header-inner {
+      max-width: 1280px; margin: 0 auto;
+      padding: 0 40px; height: 100%;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lp-logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+    .lp-logo img { width: 28px; height: 28px; object-fit: contain; }
+    .lp-logo-name { font-size: 15px; font-weight: 800; letter-spacing: -0.02em; }
+    .lp-logo-by {
+      font-size: 10px; font-weight: 700; color: var(--brand);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 2px 7px; background: var(--brand-50); border-radius: 99px;
+    }
+    .lp-header-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 22px; background: var(--brand); color: #fff;
+      font-size: 13px; font-weight: 700; border-radius: 99px;
+      text-decoration: none; transition: background 0.15s;
+    }
+    .lp-header-cta:hover { background: var(--brand-700); }
+
+    /* ─── BODY ─── */
+    .lp-body {
+      max-width: 1280px; margin: 0 auto; padding: 0 40px;
+      display: grid; grid-template-columns: 1fr 400px; gap: 56px;
+      align-items: start;
+    }
+
+    /* ─── LEFT ─── */
+    .lp-left { padding: 64px 0 120px; }
+
+    /* ─── RIGHT STICKY ─── */
+    .lp-right {
+      position: sticky; top: 64px;
+      height: calc(100vh - 64px);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 14px;
+    }
+
+    /* Phone mock — clip to phone's outer corner radius (60px @ scale 1) */
+    .lp-mock-frame {
+      overflow: hidden;
+      width:  calc(410px * var(--phone-scale, 0.72));
+      height: calc(864px * var(--phone-scale, 0.72));
+      border-radius: calc(60px * var(--phone-scale, 0.72));
+      flex-shrink: 0;
+      background: transparent;
+    }
+    .lp-mock-frame iframe {
+      width: 410px; height: 864px; border: none; display: block;
+      transform-origin: top left;
+      transform: scale(var(--phone-scale, 0.72));
+    }
+
+    /* Expand button */
+    .lp-expand-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 7px 16px;
+      background: var(--surf-soft); border: 1px solid var(--border);
+      border-radius: 99px; font-size: 11px; font-weight: 700;
+      color: var(--ink-700); cursor: pointer; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .lp-expand-btn:hover { background: var(--border); }
+
+    /* Caption */
+    .lp-phone-caption {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 10px; font-weight: 700; color: var(--ink-500);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      transition: opacity 0.3s;
+    }
+    .lp-phone-caption::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: #22c55e; border-radius: 50%;
+      animation: lp-pulse 2s infinite;
+    }
+    @keyframes lp-pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(0.78); }
+    }
+
+    /* ─── FULL-SCREEN OVERLAY ─── */
+    .lp-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0, 0, 0, 0.9);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 16px;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.25s;
+    }
+    .lp-overlay.open { opacity: 1; pointer-events: all; }
+    .overlay-bar {
+      display: flex; align-items: center; justify-content: space-between;
+      color: #fff; width: var(--overlay-phone-w, 360px);
+    }
+    .overlay-title { font-size: 14px; font-weight: 700; }
+    .overlay-close {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
+      color: #fff; padding: 7px 14px; border-radius: 99px;
+      font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+    }
+    .overlay-phone {
+      overflow: hidden;
+      border-radius: calc(60px * var(--overlay-scale, 1));
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5);
+    }
+    .overlay-phone iframe {
+      width: 410px; height: 864px; border: none; display: block;
+      transform-origin: top left;
+      transform: scale(var(--overlay-scale, 1));
+    }
+
+
+    /* ─── SECTION COMMON ─── */
+    .lp-section { padding: 60px 0; border-bottom: 1px solid var(--border); }
+    .lp-section:last-child { border-bottom: none; }
+
+    .lp-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+    .lp-eyebrow-num {
+      font-family: var(--font-en); font-size: 10px; font-weight: 800;
+      letter-spacing: 0.08em; color: var(--brand);
+      background: var(--brand-50); padding: 3px 9px; border-radius: 99px;
+    }
+    .lp-eyebrow-tag {
+      font-family: var(--font-en); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.1em; color: var(--ink-500); text-transform: uppercase;
+    }
+
+    .lp-headline {
+      font-size: 30px; font-weight: 900;
+      line-height: 1.28; letter-spacing: -0.025em;
+      margin-bottom: 14px;
+    }
+    .lp-headline .accent { color: var(--brand); }
+    .lp-headline .quote  { color: var(--ink-500); }   /* 「」のみ灰 */
+
+    .lp-desc { font-size: 14px; line-height: 1.85; color: var(--ink-700); margin-bottom: 28px; }
+    .lp-desc b { color: var(--ink); }
+    .lp-desc .em { color: var(--brand); font-weight: 700; }
+
+    /* ─── HERO ─── */
+    .lp-hero { padding: 72px 0 60px; border-bottom: 1px solid var(--border); }
+    .lp-hero-tag {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 13px; background: var(--brand-50); border: 1px solid var(--brand-100);
+      border-radius: 99px; font-size: 11px; font-weight: 700; color: var(--brand);
+      margin-bottom: 26px; letter-spacing: 0.03em;
+    }
+    .lp-hero-headline {
+      font-size: 46px; font-weight: 900;
+      line-height: 1.18; letter-spacing: -0.035em; margin-bottom: 20px;
+    }
+    .lp-hero-headline .accent { color: var(--brand); }
+    .lp-hero-sub {
+      font-size: 15px; line-height: 1.8; color: var(--ink-700);
+      margin-bottom: 40px; max-width: 520px;
+    }
+    .lp-hero-stats { display: flex; gap: 12px; flex-wrap: wrap; }
+    .hero-stat {
+      padding: 16px 20px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r); min-width: 130px;
+    }
+    .hero-stat-num {
+      font-family: var(--font-en); font-size: 22px; font-weight: 800;
+      color: var(--brand); line-height: 1; letter-spacing: -0.02em;
+    }
+    .hero-stat-label { font-size: 11px; font-weight: 600; color: var(--ink-500); margin-top: 5px; line-height: 1.4; }
+
+    /* ─── PROBLEM CARDS ─── */
+    .p-cards { display: flex; flex-direction: column; gap: 10px; }
+    .p-card {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 16px 18px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r);
+    }
+    .p-card-num {
+      font-family: var(--font-en); font-size: 11px; font-weight: 800; color: var(--brand);
+      background: var(--brand-50); width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+    }
+    .p-card-icon { color: var(--ink-500); width: 16px; height: 16px; flex-shrink: 0; margin-top: 3px; }
+    .p-card-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+    .p-card-desc { font-size: 12px; color: var(--ink-500); line-height: 1.6; }
+
+    /* ─── ICEBERG ─── */
+    .iceberg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .ice-col { border-radius: var(--r); padding: 18px; }
+    .ice-col-surface { background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .ice-col-hidden  { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .ice-col-head {
+      font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+      display: flex; align-items: center; gap: 5px; margin-bottom: 12px;
+    }
+    .ice-col-surface .ice-col-head { color: #16a34a; }
+    .ice-col-hidden  .ice-col-head { color: #1d4ed8; }
+    .ice-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .ice-chip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 99px; line-height: 1.5; }
+    .ice-col-surface .ice-chip { background: #dcfce7; color: #15803d; }
+    .ice-col-hidden  .ice-chip { background: #dbeafe; color: #1d4ed8; }
+    .ice-note {
+      padding: 11px 14px; background: #fffbeb; border: 1px solid #fde68a;
+      border-radius: var(--r); font-size: 12px; color: #92400e; font-weight: 500; line-height: 1.6;
+    }
+
+    /* ─── POINTS ─── */
+    .points-list { display: flex; flex-direction: column; gap: 10px; }
+    .point-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 15px 17px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r);
+    }
+    .point-ic {
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--brand-50); color: var(--brand);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .point-text { font-size: 13px; line-height: 1.65; padding-top: 5px; }
+
+    /* ─── SWIPE COUNTER ─── */
+    .swipe-counter {
+      padding: 20px 22px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r-lg);
+    }
+    .swipe-counter-label { font-size: 11px; font-weight: 600; color: var(--ink-500); margin-bottom: 8px; }
+    .swipe-counter-row { display: flex; align-items: baseline; gap: 4px; margin-bottom: 10px; }
+    .swipe-num { font-family: var(--font-en); font-size: 40px; font-weight: 800; color: var(--brand); line-height: 1; letter-spacing: -0.03em; }
+    .swipe-total { font-size: 14px; color: var(--ink-500); font-weight: 600; }
+    .swipe-bar { height: 6px; background: var(--brand-100); border-radius: 99px; overflow: hidden; }
+    .swipe-fill { height: 100%; width: 65%; background: var(--brand); border-radius: 99px; }
+
+    /* ─── FEEDBACK OPTIONS ─── */
+    .fb-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .fb-opt {
+      display: flex; align-items: center; gap: 9px;
+      padding: 11px 13px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r);
+      font-size: 12px; font-weight: 600;
+    }
+    .fb-opt-ic { color: var(--ink-500); flex-shrink: 0; }
+    .fb-note {
+      margin-top: 12px; padding: 11px 14px;
+      background: var(--brand-50); border-radius: var(--r);
+      font-size: 12px; font-weight: 600; color: var(--brand);
+      display: flex; align-items: center; gap: 7px;
+    }
+
+    /* ─── DAY COMPARE ─── */
+    .day-compare { display: grid; grid-template-columns: 1fr 60px 1fr; gap: 10px; align-items: start; }
+    .day-col-lp { border-radius: var(--r); overflow: hidden; border: 1px solid var(--border); }
+    .day-col-lp.after { border-color: var(--brand-100); }
+    .day-col-head {
+      padding: 9px 13px; font-size: 10px; font-weight: 800;
+      letter-spacing: 0.07em; text-transform: uppercase;
+      background: var(--surf-soft); border-bottom: 1px solid var(--border);
+    }
+    .day-col-lp.after .day-col-head { background: var(--brand-50); color: var(--brand); border-color: var(--brand-100); }
+    .day-rows { display: flex; flex-direction: column; }
+    .day-row { display: flex; align-items: center; gap: 7px; padding: 8px 13px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 600; }
+    .day-row:last-child { border-bottom: none; }
+    .day-row.hl { background: var(--brand-50); }
+    .day-rank { font-family: var(--font-en); font-size: 10px; font-weight: 800; color: var(--ink-500); width: 14px; }
+    .day-job { flex: 1; }
+    .move { font-family: var(--font-en); font-size: 9px; font-weight: 700; }
+    .move.up   { color: var(--brand); }
+    .move.new  { color: #16a34a; background: #dcfce7; padding: 1px 5px; border-radius: 4px; }
+    .move.same { color: var(--ink-300); }
+    .move.dn   { color: #ef4444; }
+    .day-sep-lp { display: flex; flex-direction: column; align-items: center; gap: 6px; padding-top: 28px; }
+    .day-sep-ic { width: 30px; height: 30px; border-radius: 50%; background: var(--brand); color: #fff; display: flex; align-items: center; justify-content: center; }
+    .day-sep-label { font-size: 9px; font-weight: 700; color: var(--ink-500); letter-spacing: 0.08em; text-transform: uppercase; text-align: center; line-height: 1.4; }
+
+    /* ─── LOOP STEPS ─── */
+    .loop-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .loop-step {
+      padding: 15px 12px; background: var(--surf-soft);
+      border: 1px solid var(--border); border-radius: var(--r);
+      display: flex; flex-direction: column; gap: 7px; position: relative;
+    }
+    .loop-step:not(:last-child)::after {
+      content: '→'; position: absolute; right: -13px; top: 50%;
+      transform: translateY(-50%); color: var(--ink-300); font-size: 14px; z-index: 1;
+    }
+    .loop-step-num { font-family: var(--font-en); font-size: 9px; font-weight: 800; color: var(--brand); letter-spacing: 0.08em; }
+    .loop-step-ic { width: 30px; height: 30px; border-radius: 8px; background: var(--brand-50); color: var(--brand); display: flex; align-items: center; justify-content: center; }
+    .loop-step-title { font-size: 12px; font-weight: 800; }
+    .loop-step-sub   { font-size: 10px; color: var(--ink-500); line-height: 1.4; }
+    .loop-note { margin-top: 12px; padding: 10px 14px; background: var(--brand-50); border-radius: var(--r); font-size: 12px; font-weight: 600; color: var(--brand); display: flex; align-items: center; gap: 7px; }
+
+    /* ─── CTA BOX ─── */
+    .cta-box { background: linear-gradient(135deg, #312eff 0%, #1e1bcc 100%); border-radius: var(--r-lg); padding: 44px; color: #fff; }
+    .cta-box-eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.7; margin-bottom: 14px; }
+    .cta-box-headline { font-size: 28px; font-weight: 900; line-height: 1.28; letter-spacing: -0.02em; margin-bottom: 14px; }
+    .cta-box-headline .accent { color: #a5b4fc; }
+    .cta-box-desc { font-size: 14px; line-height: 1.8; opacity: 0.88; margin-bottom: 32px; }
+    .cta-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 32px; }
+    .cta-btn-primary { display: inline-flex; align-items: center; gap: 7px; padding: 14px 28px; background: #fff; color: var(--brand); font-size: 14px; font-weight: 800; border-radius: 99px; text-decoration: none; }
+    .cta-btn-ghost { display: inline-flex; align-items: center; gap: 7px; padding: 14px 28px; background: rgba(255,255,255,0.12); color: #fff; font-size: 14px; font-weight: 700; border-radius: 99px; text-decoration: none; border: 1px solid rgba(255,255,255,0.28); }
+    .cta-qr-row { display: flex; align-items: center; gap: 20px; }
+    .cta-qr { width: 80px; height: 80px; background: #fff; border-radius: 10px; padding: 6px; object-fit: contain; flex-shrink: 0; }
+    .cta-qr-meta { display: flex; flex-direction: column; gap: 4px; }
+    .cta-qr-label { font-size: 10px; font-weight: 700; opacity: 0.65; letter-spacing: 0.07em; text-transform: uppercase; }
+    .cta-qr-text  { font-size: 14px; font-weight: 700; }
+    .cta-qr-sub   { font-size: 12px; opacity: 0.7; }
+
+    /* ─── FOOTER ─── */
+    .lp-footer { padding: 28px 40px; text-align: center; font-size: 11px; color: var(--ink-500); border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="lp-header">
+  <div class="lp-header-inner">
+    <a class="lp-logo" href="#">
+      <span class="lp-logo-name">Mico Work Match</span>
+    </a>
+  </div>
+</header>
+
+<div class="lp-body">
+
+  <!-- ── LEFT SCROLL ── -->
+  <div class="lp-left">
+
+    <!-- HERO -->
+    <div class="lp-hero" data-caption="スワイプを体験中">
+      <div class="lp-hero-tag">
+        <i data-lucide="sparkles" style="width:12px;height:12px;"></i>
+        LINEミニアプリ × Mico Engage AI
+      </div>
+      <h1 class="lp-hero-headline">
+        スワイプで変わる、<br>
+        採用の<span class="accent">精度</span>。
+      </h1>
+      <p class="lp-hero-sub">
+        求職者の「本音」をゲーム感覚で収集し、AIがマッチング精度を翌日から自動更新。
+        LINEミニアプリが、「待ち」の採用を「攻め」に変えます。
+      </p>
+      <div class="lp-hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">9,500<span style="font-size:14px;font-weight:700;">万人</span></div>
+          <div class="hero-stat-label">LINE国内 月間アクティブユーザー</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">20<span style="font-size:14px;font-weight:700;">件/日</span></div>
+          <div class="hero-stat-label">1日あたりのスワイプ上限</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">翌日<span style="font-size:14px;font-weight:700;">から</span></div>
+          <div class="hero-stat-label">求人リストの自動最適化</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 01 PROBLEM -->
+    <section class="lp-section" id="s-problem" data-caption="現場の3つの課題">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">01</span>
+        <span class="lp-eyebrow-tag">Problem</span>
+      </div>
+      <h2 class="lp-headline">
+        <span class="quote">「</span><span class="accent">本気</span><span class="quote">」</span>の候補者が、<br>見つからない。
+      </h2>
+      <p class="lp-desc">人材派遣の現場が直面する、3つの構造的な限界。</p>
+      <div class="p-cards">
+        <div class="p-card">
+          <span class="p-card-num">01</span>
+          <i class="p-card-icon" data-lucide="megaphone-off"></i>
+          <div>
+            <div class="p-card-title">広告費をかけても「待ち」の状態</div>
+            <div class="p-card-desc">求人を出して応募を待つだけでは、志望度の高い候補者に届かない。</div>
+          </div>
+        </div>
+        <div class="p-card">
+          <span class="p-card-num">02</span>
+          <i class="p-card-icon" data-lucide="eye-off"></i>
+          <div>
+            <div class="p-card-title">会ってみるまで「志望度」が不明</div>
+            <div class="p-card-desc">応募書類だけでは本音の温度感がわからず、面談の歩留まりが読めない。</div>
+          </div>
+        </div>
+        <div class="p-card">
+          <span class="p-card-num">03</span>
+          <i class="p-card-icon" data-lucide="unplug"></i>
+          <div>
+            <div class="p-card-title">連絡が途切れると「それっきり」</div>
+            <div class="p-card-desc">一度離れた候補者へ再アプローチする仕組みがなく、接点を失い続ける。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 02 INSIGHT -->
+    <section class="lp-section" id="s-insight" data-caption="本音データの氷山">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">02</span>
+        <span class="lp-eyebrow-tag">Insight</span>
+      </div>
+      <h2 class="lp-headline">
+        理由は、<span class="accent">"本音のデータ"</span>が<br>足りないから。
+      </h2>
+      <p class="lp-desc">「応募」はアクションの<b>氷山の一角</b>。選ばれなかった理由＝<b>"No"の中</b>にこそ、マッチングのヒントが隠れています。</p>
+      <div class="iceberg-grid">
+        <div class="ice-col ice-col-surface">
+          <div class="ice-col-head">
+            <i data-lucide="file-text" style="width:12px;height:12px;"></i>
+            見えているデータ
+          </div>
+          <div class="ice-chips">
+            <span class="ice-chip">名前</span>
+            <span class="ice-chip">住所</span>
+            <span class="ice-chip">前職</span>
+            <span class="ice-chip">年齢</span>
+            <span class="ice-chip">応募日時</span>
+          </div>
+        </div>
+        <div class="ice-col ice-col-hidden">
+          <div class="ice-col-head">
+            <i data-lucide="waves" style="width:12px;height:12px;"></i>
+            隠れた"本音のデータ"
+          </div>
+          <div class="ice-chips">
+            <span class="ice-chip">選ばれなかった理由</span>
+            <span class="ice-chip">志望度の高さ</span>
+            <span class="ice-chip">希望条件の本音</span>
+            <span class="ice-chip">離脱タイミング</span>
+            <span class="ice-chip">"微妙"ポイント</span>
+          </div>
+        </div>
+      </div>
+      <div class="ice-note">
+        💡 "No"のデータを集めるほど、AIのマッチング精度が上がっていきます。
+      </div>
+    </section>
+
+    <!-- 03 SOLUTION -->
+    <section class="lp-section" id="s-solution" data-caption="LINEで即起動">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">03</span>
+        <span class="lp-eyebrow-tag">Solution</span>
+      </div>
+      <h2 class="lp-headline">
+        LINEで完結。<br>スマホ1つで、<span class="accent">惹きつける</span>。
+      </h2>
+      <p class="lp-desc">アプリのダウンロード不要。LINEのリッチメニューからそのまま起動。既存の友だち全員に<b>「攻め」のアプローチ</b>が可能に。</p>
+      <div class="points-list">
+        <div class="point-item">
+          <span class="point-ic"><i data-lucide="zap" style="width:15px;height:15px;"></i></span>
+          <div class="point-text">DL不要・リッチメニューから<b>即起動</b>。ログイン画面もなく、タップした瞬間から体験が始まる。</div>
+        </div>
+        <div class="point-item">
+          <span class="point-ic"><i data-lucide="send" style="width:15px;height:15px;"></i></span>
+          <div class="point-text">既存の友だちリストに、今すぐ<b>「攻め」のアプローチ</b>。Push通知で熱量が高いタイミングを逃さない。</div>
+        </div>
+        <div class="point-item">
+          <span class="point-ic"><i data-lucide="shield-check" style="width:15px;height:15px;"></i></span>
+          <div class="point-text">LINE認証でユーザーを<b>自動識別</b>。入力フォームなしでスムーズに求人閲覧・反応収集。</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 04 SWIPE UI -->
+    <section class="lp-section" id="s-swipe" data-caption="スワイプ体験中">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">04</span>
+        <span class="lp-eyebrow-tag">Swipe UI</span>
+      </div>
+      <h2 class="lp-headline">
+        スワイプUIで、<br><span class="accent">"好き嫌い"</span>を可視化。
+      </h2>
+      <p class="lp-desc">1日20件。ゲーム感覚の操作が、履歴書には載らない<b>「本音の志望度」</b>をあぶり出す。右スワイプが「気になる」、左が「スキップ」。</p>
+      <div class="swipe-counter">
+        <div class="swipe-counter-label">本日のスワイプ数</div>
+        <div class="swipe-counter-row">
+          <span class="swipe-num" id="lp-swipe-num">13</span>
+          <span class="swipe-total">/ 20件</span>
+        </div>
+        <div class="swipe-bar"><div class="swipe-fill" id="lp-swipe-fill" style="width:65%"></div></div>
+      </div>
+    </section>
+
+    <!-- 05 DATA -->
+    <section class="lp-section" id="s-data" data-caption="フィードバック機能">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">05</span>
+        <span class="lp-eyebrow-tag">Data</span>
+      </div>
+      <h2 class="lp-headline">
+        <span class="accent">「微妙」</span>という答えが、<br>AIを育てる。
+      </h2>
+      <p class="lp-desc">なぜ「微妙」なのか？ 理由を1タップで選ぶだけで、<b>Mico Engage AI</b>が属性を<span class="em">即時アップデート</span>。次回からより精度の高い求人が届く。</p>
+      <div class="fb-opts">
+        <div class="fb-opt"><i class="fb-opt-ic" data-lucide="map-pin" style="width:15px;height:15px;"></i>勤務地が遠い</div>
+        <div class="fb-opt"><i class="fb-opt-ic" data-lucide="japanese-yen" style="width:15px;height:15px;"></i>時給が低い</div>
+        <div class="fb-opt"><i class="fb-opt-ic" data-lucide="briefcase" style="width:15px;height:15px;"></i>職種が合わない</div>
+        <div class="fb-opt"><i class="fb-opt-ic" data-lucide="clock" style="width:15px;height:15px;"></i>勤務時間が合わない</div>
+      </div>
+      <div class="fb-note">
+        <i data-lucide="sparkles" style="width:14px;height:14px;"></i>
+        回答するとAIが即時に属性を更新し、次の求人リストに反映されます。
+      </div>
+    </section>
+
+    <!-- 06 PERSONALIZATION -->
+    <section class="lp-section" id="s-personalization" data-caption="パーソナライズ中">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">06</span>
+        <span class="lp-eyebrow-tag">Personalized</span>
+      </div>
+      <h2 class="lp-headline">
+        使うほど、<span class="accent">"あなた専用"</span>に<br>進化する。
+      </h2>
+      <p class="lp-desc">翌日には求人リストを<b>自動最適化</b>。熱量が高いタイミングを逃さずPush通知。</p>
+      <div class="day-compare">
+        <div class="day-col-lp before">
+          <div class="day-col-head">Day 1 / 一般おすすめ</div>
+          <div class="day-rows">
+            <div class="day-row"><span class="day-rank">1</span><span class="day-job">製造ライン補助</span></div>
+            <div class="day-row"><span class="day-rank">2</span><span class="day-job">倉庫仕分け</span></div>
+            <div class="day-row"><span class="day-rank">3</span><span class="day-job">アパレル販売</span></div>
+            <div class="day-row"><span class="day-rank">4</span><span class="day-job">コールセンター</span></div>
+            <div class="day-row"><span class="day-rank">5</span><span class="day-job">一般事務</span></div>
+          </div>
+        </div>
+        <div class="day-sep-lp">
+          <div class="day-sep-ic"><i data-lucide="sparkles" style="width:14px;height:14px;"></i></div>
+          <div class="day-sep-label">AI<br>学習</div>
+        </div>
+        <div class="day-col-lp after">
+          <div class="day-col-head">Day 2 / あなた専用</div>
+          <div class="day-rows">
+            <div class="day-row hl"><span class="day-rank">1</span><span class="day-job">一般事務</span><span class="move up">↑4</span></div>
+            <div class="day-row hl"><span class="day-rank">2</span><span class="day-job">データ入力</span><span class="move new">NEW</span></div>
+            <div class="day-row hl"><span class="day-rank">3</span><span class="day-job">受付事務</span><span class="move new">NEW</span></div>
+            <div class="day-row"><span class="day-rank">4</span><span class="day-job">コールセンター</span><span class="move same">–</span></div>
+            <div class="day-row"><span class="day-rank">5</span><span class="day-job">アパレル販売</span><span class="move dn">↓2</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 07 SYSTEM -->
+    <section class="lp-section" id="s-loop" data-caption="イベントループ">
+      <div class="lp-eyebrow">
+        <span class="lp-eyebrow-num">07</span>
+        <span class="lp-eyebrow-tag">System</span>
+      </div>
+      <h2 class="lp-headline">
+        タップするたび、<br><span class="accent">配信が賢くなる</span>。
+      </h2>
+      <p class="lp-desc">Web上の求人を<b>自動収集</b>し、AIが<b>マッチ度を学習</b>。タップ→学習→パーソナライズ の高速ループが毎日回り続ける。</p>
+      <div class="loop-steps">
+        <div class="loop-step">
+          <div class="loop-step-num">01</div>
+          <div class="loop-step-ic"><i data-lucide="mouse-pointer-click" style="width:15px;height:15px;"></i></div>
+          <div class="loop-step-title">タップ</div>
+          <div class="loop-step-sub">求職者アクション</div>
+        </div>
+        <div class="loop-step">
+          <div class="loop-step-num">02</div>
+          <div class="loop-step-ic"><i data-lucide="zap" style="width:15px;height:15px;"></i></div>
+          <div class="loop-step-title">イベント発火</div>
+          <div class="loop-step-sub">Mico Engage AIに送信</div>
+        </div>
+        <div class="loop-step">
+          <div class="loop-step-num">03</div>
+          <div class="loop-step-ic"><i data-lucide="brain" style="width:15px;height:15px;"></i></div>
+          <div class="loop-step-title">AI学習</div>
+          <div class="loop-step-sub">嗜好を解析</div>
+        </div>
+        <div class="loop-step">
+          <div class="loop-step-num">04</div>
+          <div class="loop-step-ic"><i data-lucide="send" style="width:15px;height:15px;"></i></div>
+          <div class="loop-step-title">配信・並べ替え</div>
+          <div class="loop-step-sub">Push＋カタログ</div>
+        </div>
+      </div>
+      <div class="loop-note">
+        <i data-lucide="refresh-cw" style="width:14px;height:14px;"></i>
+        毎日ループし、使うほど精度が上がっていく
+      </div>
+    </section>
+
+    <!-- 08 CTA -->
+    <section class="lp-section" id="cta" data-caption="デモを体感">
+      <div class="cta-box">
+        <h2 class="cta-box-headline">
+          <span class="accent">「選ばれる」</span>マッチングを、<br>デモで体感。
+        </h2>
+        <p class="cta-box-desc">QRコードをスキャンするだけで、実際のミニアプリをその場でLINEから体験できます。スワイプ・フィードバック・パーソナライズを今すぐお試しください。</p>
+        <div class="cta-qr-row">
+          <img class="cta-qr" src="https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=https://line.me/R/ti/p/%40mico-work-match&margin=0" alt="QRコード">
+          <div class="cta-qr-meta">
+            <div class="cta-qr-label">QRコードをスキャン → すぐ体験</div>
+            <div class="cta-qr-text">LINEミニアプリ デモ</div>
+            <div class="cta-qr-sub">スワイプ・フィードバックを実際に操作</div>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <a href="#" class="cta-btn-ghost">
+            <i data-lucide="file-text" style="width:15px;height:15px;"></i>
+            資料をダウンロード
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /lp-left -->
+
+  <!-- ── RIGHT STICKY PHONE ── -->
+  <div class="lp-right">
+    <div class="lp-mock-frame" id="phone-frame">
+      <iframe
+        src="https://fluffy-disco-7p74plk.pages.github.io/?screen=swipe&embed=1"
+        id="phone-iframe"
+        title="Mico Work Match ミニアプリ"
+        loading="eager"
+        allow="autoplay"
+        allowtransparency="true"
+      ></iframe>
+    </div>
+
+    <button class="lp-expand-btn" id="expand-btn">
+      <i data-lucide="expand" style="width:13px;height:13px;"></i>
+      フルスクリーンで見る
+    </button>
+
+    <div class="lp-phone-caption" id="phone-caption">スワイプを体験中</div>
+  </div>
+
+</div><!-- /lp-body -->
+
+<!-- FULL-SCREEN OVERLAY -->
+<div class="lp-overlay" id="lp-overlay" aria-hidden="true">
+  <div class="overlay-bar">
+    <span class="overlay-title">Mico Work Match ミニアプリ</span>
+    <button class="overlay-close" id="overlay-close">
+      <i data-lucide="x" style="width:14px;height:14px;"></i>
+      閉じる
+    </button>
+  </div>
+  <div class="overlay-phone" id="overlay-phone">
+    <iframe
+      src="https://fluffy-disco-7p74plk.pages.github.io/?screen=swipe&embed=1"
+      title="フルスクリーンプレビュー"
+      allow="autoplay"
+      allowtransparency="true"
+    ></iframe>
+  </div>
+</div>
+
+<footer class="lp-footer">
+  © 2025 mico inc. — Mico Work Match × Mico Engage AI
+</footer>
+
+<script>
+  lucide.createIcons();
+
+  const phoneIframe = document.getElementById('phone-iframe');
+
+  // ── Dynamic phone scale (410×864 IOSDevice frame) ──
+  function updatePhoneScale() {
+    const right = document.querySelector('.lp-right');
+    if (!right) return;
+    const rh = right.getBoundingClientRect().height;
+    const rw = right.getBoundingClientRect().width;
+    const targetH = rh - 80;  // caption + expand btn + gaps
+    const targetW = rw - 32;
+    const scale = Math.min(targetH / 864, targetW / 410, 0.88);
+    document.documentElement.style.setProperty('--phone-scale', Math.max(scale, 0.52).toFixed(4));
+  }
+  updatePhoneScale();
+  window.addEventListener('resize', updatePhoneScale);
+
+  // ── Scroll-linked caption ──
+  const sectionsForCaption = document.querySelectorAll('[data-caption]');
+  const caption = document.getElementById('phone-caption');
+  const capObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) caption.textContent = e.target.dataset.caption;
+    });
+  }, { rootMargin: '-25% 0px -65% 0px', threshold: 0 });
+  sectionsForCaption.forEach(s => capObs.observe(s));
+
+  // ── Scroll → phone screen linking ──
+  const sectionCmds = [
+    ['.lp-hero',           { type: 'WM_CMD', screen: 'swipe' }],
+    ['#s-problem',         { type: 'WM_CMD', screen: 'lineIntro' }],
+    ['#s-insight',         { type: 'WM_CMD', showFeedback: true }],
+    // #s-solution & #s-swipe handled specially below
+    ['#s-data',            { type: 'WM_CMD', showFeedback: true }],
+    ['#s-personalization', { type: 'WM_CMD', screen: 'history' }],
+    ['#s-loop',            { type: 'WM_CMD', screen: 'swipe' }],
+    ['#cta',               { type: 'WM_CMD', screen: 'swipe' }],
+  ];
+
+  // Pause scroll-linking while the user's pointer is over the phone mock
+  let phoneHovered = false;
+  const rightPanel = document.querySelector('.lp-right');
+  if (rightPanel) {
+    rightPanel.addEventListener('mouseenter', () => { phoneHovered = true; });
+    rightPanel.addEventListener('mouseleave', () => {
+      phoneHovered = false;
+      // Reset phone to initial demo state when user stops interacting with mock
+      if (phoneIframe && phoneIframe.contentWindow) {
+        phoneIframe.contentWindow.postMessage({ type: 'WM_CMD', resetState: true }, '*');
+      }
+    });
+  }
+
+  function sendCmd(cmd) {
+    if (phoneHovered) return; // don't interrupt while user is interacting
+    if (phoneIframe && phoneIframe.contentWindow) {
+      phoneIframe.contentWindow.postMessage(cmd, '*');
+    }
+  }
+
+  // ── #s-solution: LINE chat bubbles → RM tap → swipe ──
+  const solutionEl = document.querySelector('#s-solution');
+  let solutionTimer = null;
+
+  // ── #s-swipe: auto-swipe cards + increment LP counter ──
+  const swipeEl  = document.querySelector('#s-swipe');
+  let swipeInterval = null;
+  let swipeCount = 13;
+
+  function updateSwipeCounter(n) {
+    const numEl  = document.getElementById('lp-swipe-num');
+    const fillEl = document.getElementById('lp-swipe-fill');
+    if (numEl)  numEl.textContent = n;
+    if (fillEl) fillEl.style.width = Math.min(100, n / 20 * 100) + '%';
+  }
+
+  function startSwipeAnim() {
+    stopSwipeAnim();
+    swipeCount = 13;
+    updateSwipeCounter(swipeCount);
+    swipeInterval = setInterval(() => {
+      if (swipeCount >= 16) { stopSwipeAnim(); return; } // stop after 3 swipes
+      swipeCount++;
+      updateSwipeCounter(swipeCount);
+      sendCmd({ type: 'WM_CMD', swipeNope: true });
+    }, 2200);
+  }
+
+  function stopSwipeAnim() {
+    clearInterval(swipeInterval);
+    swipeInterval = null;
+    updateSwipeCounter(13); // reset counter display
+  }
+
+  const cmdObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      // ── solution section ──
+      if (e.target === solutionEl) {
+        clearTimeout(solutionTimer);
+        if (e.isIntersecting) {
+          sendCmd({ type: 'WM_CMD', screen: 'lineIntro', reset: true });
+          solutionTimer = setTimeout(() => sendCmd({ type: 'WM_CMD', screen: 'swipe' }), 3800);
+        }
+        return;
+      }
+      // ── swipe section ──
+      if (e.target === swipeEl) {
+        if (e.isIntersecting) {
+          sendCmd({ type: 'WM_CMD', screen: 'swipe' });
+          startSwipeAnim();
+        } else {
+          stopSwipeAnim();
+        }
+        return;
+      }
+      if (!e.isIntersecting) return;
+      if (e.target._wmCmd) sendCmd(e.target._wmCmd);
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+  if (solutionEl) cmdObs.observe(solutionEl);
+  if (swipeEl)    cmdObs.observe(swipeEl);
+
+  sectionCmds.forEach(([sel, cmd]) => {
+    const el = document.querySelector(sel);
+    if (el) { el._wmCmd = cmd; cmdObs.observe(el); }
+  });
+
+  // ── Full-screen overlay ──
+  function openOverlay() {
+    const avH = window.innerHeight - 120;
+    const avW = Math.min(window.innerWidth - 40, 540);
+    const scale = Math.min(avH / 864, avW / 410, 1);
+    const ow = Math.round(410 * scale);
+    const oh = Math.round(864 * scale);
+
+    const phone = document.getElementById('overlay-phone');
+    phone.style.width  = ow + 'px';
+    phone.style.height = oh + 'px';
+    phone.style.borderRadius = Math.round(60 * scale) + 'px';
+    phone.querySelector('iframe').style.transform = `scale(${scale})`;
+    phone.querySelector('iframe').style.transformOrigin = 'top left';
+
+    document.querySelector('.overlay-bar').style.width = ow + 'px';
+    document.getElementById('lp-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeOverlay() {
+    document.getElementById('lp-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('expand-btn').addEventListener('click', openOverlay);
+  document.getElementById('overlay-close').addEventListener('click', closeOverlay);
+  document.getElementById('lp-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeOverlay();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOverlay(); });
+</script>
+</body>
+</html>
