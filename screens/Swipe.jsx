@@ -14,12 +14,13 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
   const onUndo = () => {
     const last = historyRef.current.pop();
     if (!last) return;
-    setIdx(i => (i - 1 + jobs.length) % jobs.length);
+    setIdx(i => Math.max(0, i - 1));
   };
 
-  const current = jobs[idx];
-  const nextJob = jobs[(idx+1) % jobs.length];
-  const next2 = jobs[(idx+2) % jobs.length];
+  // No looping — once swiped, cards don't come back
+  const current = idx < jobs.length ? jobs[idx] : null;
+  const nextJob = (idx + 1) < jobs.length ? jobs[idx + 1] : null;
+  const next2 = (idx + 2) < jobs.length ? jobs[idx + 2] : null;
 
   const finalize = React.useCallback((dir) => {
     if (animatingRef.current) return;
@@ -33,7 +34,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       historyRef.current.push({dir, idx});
       if (dir === 'like') onLike(jobs[idx]);
       else onNope(jobs[idx]);
-      setIdx(i => (i + 1) % jobs.length);
+      setIdx(i => i + 1);
       // Wait one frame so React renders with the card hidden, then reveal at x=0
       requestAnimationFrame(() => {
         dragRef.current = {x: 0, y: 0, active: false};
