@@ -42,7 +42,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
   }, [idx, jobs, onLike, onNope]);
 
   // After flyout CSS transition ends, advance to next card
-  const onTransitionEnd = React.useCallback(() => {
+  const advanceCard = React.useCallback(() => {
     if (!goneRef.current) return;
     goneRef.current = null;
     setGone(null);
@@ -51,20 +51,18 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
     setDrag({x: 0, y: 0, active: false});
   }, []);
 
+  const onTransitionEnd = React.useCallback((e) => {
+    // Only react to the card element's own transition, not children's
+    if (e.target !== e.currentTarget) return;
+    advanceCard();
+  }, [advanceCard]);
+
   // Fallback: if transitionend doesn't fire, advance after 350ms
   React.useEffect(() => {
     if (!gone) return;
-    const timer = setTimeout(() => {
-      if (goneRef.current) {
-        goneRef.current = null;
-        setGone(null);
-        setIdx(i => i + 1);
-        dragRef.current = {x: 0, y: 0, active: false};
-        setDrag({x: 0, y: 0, active: false});
-      }
-    }, 350);
+    const timer = setTimeout(() => advanceCard(), 350);
     return () => clearTimeout(timer);
-  }, [gone]);
+  }, [gone, advanceCard]);
 
   // Drag handling via window listeners (refs for no stale closures)
   const doSwipeRef = React.useRef(doSwipe);

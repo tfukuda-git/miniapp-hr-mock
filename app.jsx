@@ -17,7 +17,7 @@ function App() {
   const [detailJob, setDetailJob] = useState(null);
   const [liked, setLiked] = useState([]);
   const [skipped, setSkipped] = useState([]);
-  const [remaining, setRemaining] = useState(10); // v5: budget of 10
+  const [remaining, setRemaining] = useState(jobs.length); // budget = number of cards
   const [toast, setToast] = useState(null);
   const toastRef = useRef(null);
   const [likeSheet, setLikeSheet] = useState(null);
@@ -131,7 +131,7 @@ function App() {
   };
 
   const handleRestart = () => {
-    setRemaining(10);
+    setRemaining(jobs.length);
     setSwipeKey(k => k + 1);
     swipeCountRef.current = 0;
     setScreen('swipe');
@@ -242,6 +242,7 @@ function App() {
               <LimitScreen
                 jobs={jobs}
                 liked={liked}
+                swipeCount={swipeCountRef.current + liked.length}
                 onNav={(k, p)=>{
                   handleNav(k, p);
                 }}

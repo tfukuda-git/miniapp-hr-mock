@@ -1,5 +1,5 @@
 // Complete screen — encouraging tone, no daily limit concept
-function LimitScreen({jobs, liked, onNav, onRestart}) {
+function LimitScreen({jobs, liked, onNav, onRestart, swipeCount}) {
   const likedJobs = liked.slice(0,3).map(l => jobs.find(j=>j.id===l.jobId)).filter(Boolean);
   return (
     <div className="wm-screen">
@@ -28,7 +28,7 @@ function LimitScreen({jobs, liked, onNav, onRestart}) {
 
         <div className="wm-wrap-stats">
           <div className="wm-wrap-stat">
-            <div className="wm-wrap-stat-num">10</div>
+            <div className="wm-wrap-stat-num">{swipeCount || jobs.length}</div>
             <div className="wm-wrap-stat-label">スワイプ</div>
           </div>
           <div className="wm-wrap-stat">
@@ -85,7 +85,7 @@ function LimitScreen({jobs, liked, onNav, onRestart}) {
             boxShadow:'none',
           }} onClick={onRestart}>
             <span className="material-symbols-rounded" style={{fontSize:18, marginRight:4, verticalAlign:'middle'}}>refresh</span>
-            もう10件スワイプする
+            もう{jobs.length}件スワイプする
           </button>
         </div>
 
