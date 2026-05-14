@@ -1,60 +1,74 @@
-// Swipe screen — Tinder-style refined. Landscape image card + info below.
+// Swipe screen — Tinder-style. Landscape image card + info below.
+// v3: simplified state management — no setTimeout, no animatingRef race conditions.
 function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remaining, toastMsg, user, liked, autoSwipe}) {
-  const [, forceRender] = React.useState(0);
-  const idxRef = React.useRef(0);
-  const [drag, setDrag] = React.useState({x: 0, y: 0, active: false, rot: null});
-  const [flyout, setFlyout] = React.useState(null); // {dir, x, rot} while card is flying out
+  const [idx, setIdx] = React.useState(0);
+  const [drag, setDrag] = React.useState({x: 0, y: 0, active: false});
+  const [gone, setGone] = React.useState(null); // null | {dir, key} — card currently flying out
   const startRef = React.useRef({x: 0, y: 0});
   const dragRef = React.useRef({x: 0, y: 0, active: false});
-  const cardRef = React.useRef(null);
-  const animatingRef = React.useRef(false);
+  const goneRef = React.useRef(null);
   const historyRef = React.useRef([]); // [{dir, idx}] for undo
 
-  const idx = idxRef.current;
   const canUndo = historyRef.current.length > 0;
   const onUndo = () => {
     const last = historyRef.current.pop();
     if (!last) return;
-    idxRef.current = Math.max(0, idxRef.current - 1);
-    forceRender(n => n + 1);
+    setGone(null);
+    goneRef.current = null;
+    setIdx(i => Math.max(0, i - 1));
   };
 
-  // No looping — once swiped, cards don't come back
   const current = idx < jobs.length ? jobs[idx] : null;
   const nextJob = (idx + 1) < jobs.length ? jobs[idx + 1] : null;
   const next2 = (idx + 2) < jobs.length ? jobs[idx + 2] : null;
 
-  const doFinalize = (dir) => {
-    if (animatingRef.current) return;
-    animatingRef.current = true;
-    const curIdx = idxRef.current;
-    const targetX = dir === 'like' ? 520 : -520;
-    const rot = dir === 'like' ? 22 : -22;
+  // Core action: process a swipe decision
+  const doSwipe = React.useCallback((dir) => {
+    if (goneRef.current) return; // Already animating out
+    const job = jobs[idx];
+    if (!job) return;
 
-    // 1. Flyout animation
-    setFlyout({dir, x: targetX, rot});
+    // Mark card as gone (triggers CSS flyout)
+    const key = job.id + '-' + idx;
+    goneRef.current = {dir, key};
+    setGone({dir, key});
 
-    // 2. After flyout animation, advance card
-    setTimeout(() => {
-      historyRef.current.push({dir, idx: curIdx});
-      if (dir === 'like') onLike(jobs[curIdx]);
-      else onNope(jobs[curIdx]);
+    // Record history
+    historyRef.current.push({dir, idx});
 
-      // Advance index
-      idxRef.current = curIdx + 1;
+    // Fire callback immediately (no delay)
+    if (dir === 'like') onLike(job);
+    else onNope(job);
+  }, [idx, jobs, onLike, onNope]);
 
-      // Reset drag and flyout
-      dragRef.current = {x: 0, y: 0, active: false};
-      setDrag({x: 0, y: 0, active: false, rot: null});
-      setFlyout(null);
-      animatingRef.current = false;
-      forceRender(n => n + 1);
-    }, 280);
-  };
+  // After flyout CSS transition ends, advance to next card
+  const onTransitionEnd = React.useCallback(() => {
+    if (!goneRef.current) return;
+    goneRef.current = null;
+    setGone(null);
+    setIdx(i => i + 1);
+    dragRef.current = {x: 0, y: 0, active: false};
+    setDrag({x: 0, y: 0, active: false});
+  }, []);
 
-  // Use ref to always have latest doFinalize for event listeners
-  const finalizeRef = React.useRef(doFinalize);
-  finalizeRef.current = doFinalize;
+  // Fallback: if transitionend doesn't fire, advance after 350ms
+  React.useEffect(() => {
+    if (!gone) return;
+    const timer = setTimeout(() => {
+      if (goneRef.current) {
+        goneRef.current = null;
+        setGone(null);
+        setIdx(i => i + 1);
+        dragRef.current = {x: 0, y: 0, active: false};
+        setDrag({x: 0, y: 0, active: false});
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [gone]);
+
+  // Drag handling via window listeners (refs for no stale closures)
+  const doSwipeRef = React.useRef(doSwipe);
+  doSwipeRef.current = doSwipe;
 
   React.useEffect(() => {
     let isTouch = false;
@@ -66,7 +80,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       const dx = pt.clientX - startRef.current.x;
       const dy = pt.clientY - startRef.current.y;
       dragRef.current = {x: dx, y: dy, active: true};
-      setDrag({x: dx, y: dy, active: true, rot: null});
+      setDrag({x: dx, y: dy, active: true});
     };
     const onUp = (e) => {
       if (!dragRef.current.active) return;
@@ -74,11 +88,11 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       const threshold = 80;
       const x = dragRef.current.x;
       dragRef.current.active = false;
-      if (x > threshold) finalizeRef.current('like');
-      else if (x < -threshold) finalizeRef.current('nope');
+      if (x > threshold) doSwipeRef.current('like');
+      else if (x < -threshold) doSwipeRef.current('nope');
       else {
         dragRef.current = {x: 0, y: 0, active: false};
-        setDrag({x: 0, y: 0, active: false, rot: null});
+        setDrag({x: 0, y: 0, active: false});
       }
       if (e.type === 'touchend') isTouch = true;
     };
@@ -92,39 +106,46 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onUp);
     };
-  }, []); // No deps — uses refs for everything
+  }, []);
 
   const onPointerDown = (e) => {
-    if (animatingRef.current) return;
+    if (goneRef.current) return;
     const isTouchEvt = !!e.touches;
     const pt = isTouchEvt ? e.touches[0] : e;
     startRef.current = {x: pt.clientX, y: pt.clientY};
     dragRef.current = {x: 0, y: 0, active: true};
-    setDrag({x: 0, y: 0, active: true, rot: null});
+    setDrag({x: 0, y: 0, active: true});
     onSwipeStart?.();
   };
 
   // Auto-swipe from LP postMessage
   React.useEffect(() => {
     if (!autoSwipe) return;
-    if (animatingRef.current) return;
-    finalizeRef.current('nope');
+    if (goneRef.current) return;
+    doSwipeRef.current('nope');
   }, [autoSwipe]);
 
   // Compute card transform
-  const cardRot = flyout ? flyout.rot : (drag.rot != null ? drag.rot : (drag.x / 16));
-  const cardX = flyout ? flyout.x : drag.x;
-  const cardY = flyout ? 0 : drag.y * 0.3;
+  const isGone = !!gone;
+  let cardX, cardY, cardRot;
+  if (isGone) {
+    cardX = gone.dir === 'like' ? 520 : -520;
+    cardY = 0;
+    cardRot = gone.dir === 'like' ? 22 : -22;
+  } else {
+    cardX = drag.x;
+    cardY = drag.y * 0.3;
+    cardRot = drag.x / 16;
+  }
   const likeOp = Math.max(0, Math.min(1, cardX / 120));
   const nopeOp = Math.max(0, Math.min(1, -cardX / 120));
   const transform = `translate(${cardX}px, ${cardY}px) rotate(${cardRot}deg)`;
 
   return (
     <div className="wm-screen wm-screen-tinder" style={{display:'flex', flexDirection:'column'}}>
-
       <div className="wm-tinder-body">
         <div className="wm-tinder-deck">
-          {next2 && !flyout && (
+          {next2 && !isGone && (
             <div key={'bg2-' + next2.id} className="wm-tcard" style={{
               transform:'scale(0.92) translateY(20px)',
               opacity: 0.4,
@@ -134,7 +155,7 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
               <TinderCardContent job={next2}/>
             </div>
           )}
-          {nextJob && !flyout && (
+          {nextJob && !isGone && (
             <div key={'bg1-' + nextJob.id} className="wm-tcard" style={{
               transform:'scale(0.96) translateY(10px)',
               opacity: 0.7,
@@ -147,15 +168,15 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
           {current && (
             <div
               key={'front-' + current.id}
-              ref={cardRef}
               className={`wm-tcard ${drag.active ? 'dragging' : ''}`}
               style={{
                 transform,
                 zIndex:3,
-                transition: flyout ? 'transform 0.26s ease-out' : 'none',
+                transition: isGone ? 'transform 0.28s ease-out' : 'none',
               }}
               onMouseDown={onPointerDown}
               onTouchStart={onPointerDown}
+              onTransitionEnd={onTransitionEnd}
             >
               <TinderCardContent job={current} onDetail={() => onOpenDetail(current)}/>
               <div className="wm-tcard-stamp wm-tcard-stamp-like" style={{opacity: likeOp}}>LIKE</div>
@@ -168,10 +189,10 @@ function SwipeScreen({jobs, onLike, onNope, onSwipeStart, onOpenDetail, remainin
           <button className="wm-tbtn wm-tbtn-undo" onClick={onUndo} aria-label="やり直し" disabled={!canUndo}>
             <span className="material-symbols-rounded" style={{fontSize:22, fontVariationSettings:"'wght' 500"}}>undo</span>
           </button>
-          <button className="wm-tbtn wm-tbtn-nope wm-tbtn-big" onClick={()=> finalizeRef.current('nope')} aria-label="スキップ">
+          <button className="wm-tbtn wm-tbtn-nope wm-tbtn-big" onClick={() => doSwipe('nope')} aria-label="スキップ">
             <span className="material-symbols-rounded" style={{fontSize:32, fontVariationSettings:"'wght' 500"}}>close</span>
           </button>
-          <button className="wm-tbtn wm-tbtn-like wm-tbtn-big" onClick={()=> finalizeRef.current('like')} aria-label="いいね">
+          <button className="wm-tbtn wm-tbtn-like wm-tbtn-big" onClick={() => doSwipe('like')} aria-label="いいね">
             <span className="material-symbols-rounded" style={{fontSize:32, fontVariationSettings:"'FILL' 1"}}>favorite</span>
           </button>
         </div>
